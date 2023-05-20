@@ -17,12 +17,10 @@ const authController = {
                     email: req.body.email,
                     password: hased,
                     userAddress: {
-                        create: [
-                            {
-                                address: req.body.address,
-                                isDefault: req.body.isDefault ? 0 : 1,
-                            },
-                        ],
+                        create: {
+                            address: req.body.address,
+                            isDefault: req.body.isDefault ? 0 : 1,
+                        },
                     },
                 },
             });

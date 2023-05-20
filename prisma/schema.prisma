@@ -10,12 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Product {
-  id        Int      @id @default(autoincrement())
-  name      String
-  price     Int
-  createdAt DateTime @default(now())
-}
+
 
 model User {
   id       Int     @id @default(autoincrement())
@@ -24,13 +19,226 @@ model User {
   password String
   admin    Boolean @default(false)
   userAddress UserAddress[]
+
+  shoppingCart ShoppingCart[]
+  userPaymentMethod UserPaymentMethod[]
+  userReview UserReview[]
 }
 
 model UserAddress {
-  id Int @id @default(autoincrement())
   address String
   isDefault Int @default(0)
 
   user User @relation(fields: [userId], references: [id])
-  userId Int @unique
+  userId Int 
+
+  addressFK Address @relation(fields: [addressesId], references: [id])
+  addressesId Int @default(0)
+
+  @@id([userId,addressesId])
 }
+
+
+model Address {
+  id Int @id @default(autoincrement())
+  unitNumber Int
+  street_number Int
+  addressDetails String
+  city Int
+  region Int
+  postalCode Int
+
+  address UserAddress[]
+
+  country Country @relation(fields: [countryId], references: [id])
+  countryId Int 
+
+  shopOrder ShopOrder[]
+}
+
+model Country {
+  id Int @id @default(autoincrement())
+  countryName String
+  countryId Address[]
+}
+
+// PRODUCT -------------------
+model Promotion {
+  id Int @id @default(autoincrement())
+  name String
+  description String?
+  discountRate Int
+  startDate DateTime
+  endDate DateTime
+
+  promotionCategory PromotionCategory[]
+}
+
+model PromotionCategory {
+  category Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
+  promotion Promotion @relation(fields: [promotionId], references: [id])
+  promotionId Int
+
+  @@id([categoryId,promotionId])
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+  categoryName String
+  parentCategoryId Int
+  
+  promotionCategory PromotionCategory[]
+  product Product[]
+  variation Variation[]
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String
+  description String
+  category  Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  createdAt DateTime @default(now())
+
+  productItem  ProductItem[]
+}
+
+model ProductItem {
+  id Int @id @default(autoincrement())
+  product Product @relation(fields: [productId], references: [id])
+  productId Int
+  SKU String
+  qtyInStock Int
+  productImage String
+  price Int
+
+  productConfiguration ProductConfiguration[]
+  orderLine OrderLine[]
+  shoppingCartItem ShoppingCartItem[]
+}
+
+model Variation {
+  id Int @id @default(autoincrement())
+  name String
+  category Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
+  variationOption VariationOption[]
+}
+
+model VariationOption {
+  id Int @id @default(autoincrement())
+  variation Variation @relation(fields: [variationId], references: [id])
+  variationId Int
+
+  productConfiguration ProductConfiguration[]
+}
+
+model ProductConfiguration {
+  productItem ProductItem @relation(fields: [productId], references: [id])
+  productId Int
+
+  variationOption VariationOption @relation(fields: [variationId], references: [id])
+  variationId Int
+
+  @@id([productId,variationId]) 
+}
+
+model ShippingMethod {
+  id Int @id @default(autoincrement())
+  name String
+  price Float
+
+  shopOrder ShopOrder[]
+}
+
+model OrderStatus {
+  id Int @id @default(autoincrement())
+  status Int
+
+  shopOrder ShopOrder[]
+}
+
+model ShopOrder {
+  id Int @id @default(autoincrement())
+  orderDate DateTime
+  address Address @relation(fields: [shippingAddress], references: [id])
+  shippingAddress Int
+
+  shippingMethodMap ShippingMethod @relation(fields: [shippingMethod], references: [id])
+  shippingMethod Int
+
+  orderTotal Int
+
+  orderStatusMap OrderStatus @relation(fields: [orderStatus], references: [id])
+  orderStatus Int
+
+  orderLine OrderLine[]
+}
+
+model ShoppingCartItem {
+  id Int @id @default(autoincrement())
+  quantity Int
+  productItem ProductItem @relation(fields: [productItemId], references: [id])
+  productItemId Int
+
+  shoppingCart ShoppingCart @relation(fields: [cartId], references: [id])
+  cartId Int
+}
+
+model ShoppingCart {
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+  userId Int 
+
+  shoppingCartItem ShoppingCartItem[]
+}
+
+model PaymentType {
+  id Int @id @default(autoincrement())
+  value String
+
+  userPaymentMethod UserPaymentMethod[]
+}
+
+model UserPaymentMethod {
+  id Int @id @default(autoincrement())
+  provider String
+  accountNumber String
+  expiryDate String
+  isDefault Int @default(0)
+
+   user User @relation(fields: [userId], references: [id])
+  userId Int
+
+  paymentType PaymentType @relation(fields: [paymentTypeId], references: [id])
+  paymentTypeId Int
+}
+
+model UserReview {
+  id Int @id @default(autoincrement())
+
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  ratingValue Int
+  comment String
+
+  orderLine OrderLine @relation(fields: [orderedProductId], references: [id])
+  orderedProductId Int
+}
+
+model OrderLine {
+  id Int @id @default(autoincrement())
+  productItem ProductItem @relation(fields: [productItemId], references: [id])
+  productItemId Int
+
+  shopOrder ShopOrder @relation(fields: [orderId], references: [id])
+  orderId Int
+  quantity Int
+  price Float
+
+  userReview UserReview[]
+}
+
