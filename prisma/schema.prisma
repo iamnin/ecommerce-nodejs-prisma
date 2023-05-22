@@ -30,12 +30,13 @@ model UserAddress {
   isDefault Int @default(0)
 
   user User @relation(fields: [userId], references: [id])
-  userId Int 
+  userId Int
 
   addressFK Address @relation(fields: [addressesId], references: [id])
   addressesId Int @default(0)
 
   @@id([userId,addressesId])
+  @@unique([userId, addressesId], name: "userAddressId")
 }
 
 
@@ -51,7 +52,7 @@ model Address {
   address UserAddress[]
 
   country Country @relation(fields: [countryId], references: [id])
-  countryId Int 
+  countryId Int
 
   shopOrder ShopOrder[]
 }
@@ -87,9 +88,10 @@ model PromotionCategory {
 model Category {
   id Int @id @default(autoincrement())
   categoryName String
-  parentCategoryId Int
-  
+  parentCategoryId Int?
+
   promotionCategory PromotionCategory[]
+
   product Product[]
   variation Variation[]
 }
@@ -143,7 +145,7 @@ model ProductConfiguration {
   variationOption VariationOption @relation(fields: [variationId], references: [id])
   variationId Int
 
-  @@id([productId,variationId]) 
+  @@id([productId,variationId])
 }
 
 model ShippingMethod {
@@ -191,7 +193,7 @@ model ShoppingCartItem {
 model ShoppingCart {
   id Int @id @default(autoincrement())
   user User @relation(fields: [userId], references: [id])
-  userId Int 
+  userId Int
 
   shoppingCartItem ShoppingCartItem[]
 }

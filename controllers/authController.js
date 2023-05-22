@@ -11,20 +11,55 @@ const authController = {
             const salt = await bcrypt.genSaltSync(10);
             const hased = await bcrypt.hashSync(req.body.password, salt);
 
-            const newUSer = await prisma.user.create({
+            const findCountry = await prisma.country.findUnique({
+                where: {
+                    id: req.body.countryId,
+                },
+            });
+
+            if (!findCountry) {
+                res.status(404).json({ msg: 'Country does not exits' });
+            }
+
+            const newUser = await prisma.user.create({
                 data: {
                     username: req.body.username,
                     email: req.body.email,
                     password: hased,
                     userAddress: {
-                        create: {
-                            address: req.body.address,
-                            isDefault: req.body.isDefault ? 0 : 1,
+                        create: [
+                            {
+                                isDefault: req.body.isDefault ? 0 : 1,
+                                address: req.body.address,
+                                addressFK: {
+                                    create: {
+                                        unitNumber: req.body.unitNumber,
+                                        street_number: req.body.street_number,
+                                        addressDetails: req.body.addressDetails,
+                                        city: req.body.city,
+                                        region: req.body.region,
+                                        postalCode: req.body.postalCode,
+                                        countryId: req.body.countryId,
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                },
+                include: {
+                    userAddress: {
+                        include: {
+                            addressFK: true,
                         },
                     },
                 },
             });
-            res.status(200).json({ msg: 'success', data: newUSer });
+            res.status(200).json({
+                msg: 'success',
+                data: {
+                    ...newUser,
+                },
+            });
         } catch (error) {
             console.log('error', error);
         }
@@ -87,7 +122,7 @@ const authController = {
         if (!refreshTokens.includes(refreshToken)) {
             return res.status(403).json({ msg: 'Refresh token is not valid' });
         }
-        jwt.verify(refreshToken, process.env.MY_SECRETKEY_REFRESH, (err, user) => {
+        jwt.verify(refreshToken, process.env.MY_SECRETKEY, (err, user) => {
             if (err) {
                 console.log(err);
             }
@@ -109,5 +144,4 @@ const authController = {
         res.status(200).json({ msg: 'Logged out' });
     },
 };
-
 export default authController;

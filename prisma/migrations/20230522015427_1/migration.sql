@@ -1,15 +1,47 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `username` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `admin` BOOLEAN NOT NULL DEFAULT false,
 
-  - You are about to drop the column `price` on the `product` table. All the data in the column will be lost.
-  - Added the required column `categoryId` to the `Product` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `description` to the `Product` table without a default value. This is not possible if the table is not empty.
+    UNIQUE INDEX `User_username_key`(`username`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-*/
--- AlterTable
-ALTER TABLE `product` DROP COLUMN `price`,
-    ADD COLUMN `categoryId` INTEGER NOT NULL,
-    ADD COLUMN `description` VARCHAR(191) NOT NULL;
+-- CreateTable
+CREATE TABLE `UserAddress` (
+    `address` VARCHAR(191) NOT NULL,
+    `isDefault` INTEGER NOT NULL DEFAULT 0,
+    `userId` INTEGER NOT NULL,
+    `addressesId` INTEGER NOT NULL DEFAULT 0,
+
+    UNIQUE INDEX `UserAddress_userId_addressesId_key`(`userId`, `addressesId`),
+    PRIMARY KEY (`userId`, `addressesId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Address` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `unitNumber` INTEGER NOT NULL,
+    `street_number` INTEGER NOT NULL,
+    `addressDetails` VARCHAR(191) NOT NULL,
+    `city` INTEGER NOT NULL,
+    `region` INTEGER NOT NULL,
+    `postalCode` INTEGER NOT NULL,
+    `countryId` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Country` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `countryName` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Promotion` (
@@ -35,7 +67,18 @@ CREATE TABLE `PromotionCategory` (
 CREATE TABLE `Category` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `categoryName` VARCHAR(191) NOT NULL,
-    `parentCategoryId` INTEGER NOT NULL,
+    `parentCategoryId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Product` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NOT NULL,
+    `categoryId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -166,6 +209,15 @@ CREATE TABLE `OrderLine` (
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `UserAddress` ADD CONSTRAINT `UserAddress_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `UserAddress` ADD CONSTRAINT `UserAddress_addressesId_fkey` FOREIGN KEY (`addressesId`) REFERENCES `Address`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Address` ADD CONSTRAINT `Address_countryId_fkey` FOREIGN KEY (`countryId`) REFERENCES `Country`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `PromotionCategory` ADD CONSTRAINT `PromotionCategory_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `Category`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
